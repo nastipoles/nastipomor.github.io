@@ -1,0 +1,408 @@
+﻿<!doctype html> 
+<meta charset="utf-8"> 
+<title>По морям, по волнам ... 5</title> 
+<style> 
+#all {
+ text-align: center;
+         margin: 0 auto; } 
+#stage 
+{ margin: 0px auto; text-align: center;
+position: relative; 
+width: 384px; 
+height: 384px; 
+background-image: url("../images/background.png"); 
+} 
+.cell 
+{ 
+display: block; 
+position: absolute; 
+width: 64px; 
+height: 64px; 
+} 
+p { 
+width: 400px;   margin: 0px auto; text-align: center;
+} 
+</style> 
+<div id="all">
+<h1>По морям, по волнам</h1>
+<div id="stage"></div> 
+<p id="output"></p> 
+</div>
+<script> 
+//Ссылки на HTML элементы stage и output 
+var stage = document.querySelector("#stage"); 
+var output = document.querySelector("#output"); 
+//Включение механизма отслеживания нажатия клавиш 
+window.addEventListener("keydown", keydownHandler, false); 
+//Карта игры 
+var map = 
+[ 
+[0, 2, 0, 0, 0, 3], 
+[0, 0, 0, 1, 0, 0], 
+[0, 1, 0, 0, 0, 0], 
+[0, 0, 0, 0, 2, 0], 
+[0, 2, 0, 1, 0, 0], 
+[0, 0, 0, 0, 0, 0] 
+]; 
+//Карта объектов игры 
+var gameObjects = 
+[ 
+[0, 0, 0, 0, 0, 0], 
+[0, 0, 0, 0, 0, 0], 
+[0, 0, 0, 0, 0, 0], 
+[0, 0, 0, 0, 0, 0], 
+[0, 0, 0, 0, 0, 0], 
+[4, 0, 0, 0, 0, 0] 
+]; 
+var gameObjects = 
+[ 
+[0, 0, 0, 0, 0, 0], 
+[0, 0, 5 , 0, 0, 0], 
+[0, 0, 0, 0, 0, 0], 
+[0, 0, 0, 0, 0, 0], 
+[0, 0, 0, 0, 0, 0], 
+[4, 0, 0, 0, 0, 0] 
+]; 
+//Коды изображений на карте 
+var WATER = 0; 
+var ISLAND = 1; 
+var PIRATE = 2; 
+var HOME = 3; 
+var SHIP = 4; 
+var MONSTER = 5; 
+//Размер клетки карты 
+var SIZE = 64; 
+//Число строк и столбцов 
+var ROWS = map.length; 
+var COLUMNS = map[0].length; 
+//Коды клавиш со стрелками 
+var UP = 38; 
+var DOWN = 40; 
+var RIGHT = 39; 
+var LEFT = 37; 
+//Определение начальной позиции судна 
+var shipRow; 
+var shipColumn; 
+var monsterRow; 
+var monsterColumn; 
+for(var row = 0; row < ROWS; row++) 
+{ 
+for(var column = 0; column < COLUMNS; column++) 
+{ 
+if(gameObjects[row][column] === SHIP) 
+{ 
+shipRow = row; 
+shipColumn = column; 
+} 
+if(gameObjects[row][column] === MONSTER) 
+{ 
+monsterRow = row; 
+monsterColumn = column; 
+} 
+} 
+} 
+//Переменные игры 
+var gold = 10; 
+var food = 10; 
+var experience = 0; 
+var gameMessage 
+= "Используйте клавиши со стрелками, чтобы вернуться домой."; 
+render(); 
+function keydownHandler(event) 
+{ 
+switch(event.keyCode) 
+{ 
+case UP: 
+//Будет ли новая позиция судна находиться в игровом поле? 
+if(shipRow > 0) 
+{ 
+//Если это так, удаляем позицию судна из массива объектов 
+gameObjects[shipRow][shipColumn] = 0; 
+//Вычисляем номер строки для новой позиции судна 
+shipRow--; 
+//Заносим новую позицию судна в массив объектов 
+gameObjects[shipRow][shipColumn] = SHIP; 
+} 
+break; 
+case DOWN: 
+if(shipRow < ROWS - 1) 
+{ 
+gameObjects[shipRow][shipColumn] = 0; 
+shipRow++; 
+gameObjects[shipRow][shipColumn] = SHIP; 
+} 
+break; 
+case LEFT: 
+if(shipColumn > 0) 
+{ 
+gameObjects[shipRow][shipColumn] = 0; 
+shipColumn--; 
+gameObjects[shipRow][shipColumn] = SHIP; 
+} 
+break; 
+case RIGHT: 
+if(shipColumn < COLUMNS - 1) 
+{ 
+gameObjects[shipRow][shipColumn] = 0; 
+shipColumn++; 
+gameObjects[shipRow][shipColumn] = SHIP; 
+} 
+break; render();
+} 
+function moveMonster() 
+{ 
+//Коды четырех возможных направлений движения монстра 
+var UP = 1; 
+var DOWN = 2; 
+var LEFT = 3; 
+var RIGHT = 4; 
+//Массив разрешенных направлений перемещения монстра 
+var validDirections = []; 
+//Выбранное направление перемещения 
+var direction = undefined; 
+//Анализ клеток карты, окружающих монстра, и добавление 
+//в массив validDirections разрешенных направлений 
+if(monsterRow > 0) 
+{ 
+var thingAbove = map[monsterRow - 1][monsterColumn]; 
+if(thingAbove === WATER) 
+{ 
+validDirections.push(UP) 
+} 
+} 
+if(monsterRow < ROWS - 1) 
+{ 
+var thingBelow = map[monsterRow + 1][monsterColumn]; 
+if(thingBelow === WATER) 
+{ 
+validDirections.push(DOWN) 
+} 
+} 
+if(monsterColumn > 0) 
+{ 
+var thingToTheLeft = map[monsterRow][monsterColumn - 1]; 
+if(thingToTheLeft === WATER) 
+{ 
+validDirections.push(LEFT) 
+} 
+} 
+if(monsterColumn < COLUMNS - 1) 
+{ 
+var thingToTheRight = map[monsterRow][monsterColumn + 1]; 
+if(thingToTheRight === WATER) 
+{ 
+validDirections.push(RIGHT) 
+} 
+} 
+//Если найдено хотя бы одно разрешенное направление, 
+//из возможных вариантов случайным образом выбирается один 
+if(validDirections.length !== 0) 
+{ 
+var randomNumber 
+= Math.floor(Math.random() * validDirections.length); 
+direction = validDirections[randomNumber];
+} 
+//Перемещение монстра в выбранном направлении 
+//Удаление старых координат монстра из массива gameObjects 
+gameObjects[monsterRow][monsterColumn] = 0; 
+//Обновление координат монстра и запись их в массив gameObjects 
+switch(direction) 
+{ 
+case UP: 
+monsterRow--; 
+gameObjects[monsterRow][monsterColumn] = MONSTER; 
+break; 
+case DOWN: 
+monsterRow++; 
+gameObjects[monsterRow][monsterColumn] = MONSTER; 
+break; 
+case LEFT: 
+monsterColumn--; 
+gameObjects[monsterRow][monsterColumn] = MONSTER; 
+break; 
+case RIGHT: 
+monsterColumn++; 
+gameObjects[monsterRow][monsterColumn] = MONSTER; 
+} 
+} 
+//Перемещение монстра 
+moveMonster(); 
+//Встретился ли корабль с монстром? 
+if(gameObjects[shipRow][shipColumn] === MONSTER) 
+{ 
+endGame(); 
+} 
+//В какой клетке карты находится корабль? 
+switch(map[shipRow][shipColumn]) 
+{ 
+case WATER: 
+gameMessage = "Вы в открытом море." 
+break; 
+case PIRATE: 
+fight(); 
+break; 
+case ISLAND: 
+trade(); 
+break; 
+case HOME: 
+endGame(); 
+break; 
+} 
+//Уменьшение количества пищи на корабле 
+food--; 
+//Проверка на наличие на судне пищи и золота 
+if(food <= 0 || gold <= 0) 
+{ 
+endGame(); 
+} 
+//Обновление отображения нового состояния игры 
+render(); 
+} 
+function trade() 
+{ 
+//Вычисление количества еды на острове и ее стоимости 
+var islandsFood = experience + gold; 
+var cost = Math.ceil(Math.random() * islandsFood); 
+//Игрок покупает еду, если у него достаточно золота 
+if(gold > cost) 
+{ 
+food += islandsFood; 
+gold -= cost; 
+experience += 2; 
+gameMessage 
+= "Вы купили кокосов: " + islandsFood 
++ ", потратив золотых монет: " + cost + "." 
+} 
+else 
+{ 
+//Сообщение о недостаточном количестве золота 
+gameMessage = "У вас недостаточно золота для покупки еды." 
+experience += 1; 
+} 
+} 
+function fight() 
+{ 
+//Вычисление силы судна игрока 
+var shipStrength = Math.ceil(Math.random() * (food + gold) / 2); 
+//Вычисление силы пиратов 
+var pirateStrength 
+= Math.ceil(Math.random() * shipStrength * 2); 
+//Анализ результата сражения 
+if(pirateStrength > shipStrength) 
+{ 
+//Пираты победили и обыскивают корабль 
+var stolenGold = Math.round(pirateStrength / 2); 
+gold -= stolenGold; 
+//Игрок получает опыт даже за неудачное сражение 
+experience += 1; 
+//Обновление игрового сообщения 
+gameMessage 
+= "В ходе сражения вы ПОТЕРЯЛИ золотых монет:" + stolenGold 
++ ".Сила вашего корабля: " + shipStrength 
++ ". Сила пиратов: " + pirateStrength + "."; 
+} 
+else 
+{ 
+//Судно игрока выигрывает бой и забирает золото пиратов 
+var pirateGold = Math.round(pirateStrength / 2); 
+gold += pirateGold; 
+//Игрок получает опыт за победу в сражении 
+experience += 2; 
+//Обновление игрового сообщения 
+gameMessage 
+= "В ходе сражения вы ПОЛУЧИЛИ золотых монет:" + stolenGold 
++ ". Сила вашего корабля: " + shipStrength 
++ ". Сила пиратов: " + pirateStrength + "."; 
+} 
+} 
+function endGame() 
+{ 
+if(map[shipRow][shipColumn] === HOME) 
+{ 
+//Вычисление оценки действий игрока 
+var score = food + gold + experience; 
+//Сообщение об окончании игры 
+gameMessage 
+= "Вы вернулись домой ЖИВЫМ! " 
++ "Количество очков: " + score; 
+} 
+else if(gameObjects[shipRow][shipColumn] === MONSTER) 
+{ 
+gameMessage = "Ваш корабль проглочен монстром!"; 
+} 
+else 
+{ 
+//Сообщение если у игрока закончилось золото или еда 
+if(gold <= 0) 
+{ 
+gameMessage += " У вас закончилось золото!"; 
+} 
+else 
+{ 
+gameMessage += " У вас закончилась еда!"; 
+} 
+gameMessage += " Экипаж бросает вас за борт!"; 
+} 
+//Прекращение отслеживания нажатий клавиш на клавиатуре 
+window.removeEventListener("keydown", keydownHandler, false); 
+} 
+function render() 
+{ 
+//Очистка stage от элементов img, созданных на предыдущем ходе 
+if(stage.hasChildNodes()) 
+{ 
+for(var i = 0; i < ROWS * COLUMNS; i++) 
+{ 
+stage.removeChild(stage.firstChild); 
+} 
+} 
+//Обновление карты на основе значений массива map 
+for(var row = 0; row < ROWS; row++) 
+{ 
+for(var column = 0; column < COLUMNS; column++) 
+{ 
+//Создание HTML элемента img для клетки карты 
+var cell = document.createElement("img"); 
+//Привязка этого элемента к CSS классу "cell" 
+cell.setAttribute("class", "cell"); 
+//Добавление этого элемента в состав элемента stage 
+stage.appendChild(cell);
+//Поиск и привязка изображения для этой клетки карты 
+switch(map[row][column]) 
+{ 
+case WATER: 
+cell.src = "../images/water.png"; 
+break; 
+case ISLAND: 
+cell.src = "../images/island.png"; 
+break; 
+case PIRATE: 
+cell.src = "../images/pirate.png"; 
+break; 
+case HOME: 
+cell.src = "../images/home.png"; 
+break; 
+} 
+//Добавление корабля из массива gameObjects 
+switch(gameObjects[row][column]) 
+{ 
+case SHIP: 
+cell.src = "../images/ship.png"; 
+break; 
+case MONSTER: 
+cell.src =  "../images/monster.png";
+break; 
+} 
+//Позиционирование клетки на карте 
+cell.style.top = row * SIZE + "px"; 
+cell.style.left = column * SIZE + "px"; 
+} 
+} 
+//Отображение на экране игрового сообщения 
+output.innerHTML = gameMessage; 
+//Отображение текущих значений золота, еды и опыта 
+output.innerHTML 
++= "<br>Золото: " + gold + ", Еда: " 
++ food + ", Опыт: " + experience; 
+} 
+</script>
