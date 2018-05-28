@@ -10,7 +10,7 @@
 position: relative; 
 width: 384px; 
 height: 384px; 
-background-image: url("../images/background.png"); 
+background-image: url('background.png'); 
 } 
 .cell 
 { 
@@ -371,26 +371,26 @@ stage.appendChild(cell);
 switch(map[row][column]) 
 { 
 case WATER: 
-cell.src = "../images/water.png"; 
+cell.src = 'water.png'; 
 break; 
 case ISLAND: 
-cell.src = "../images/island.png"; 
+cell.src = 'island.png'; 
 break; 
 case PIRATE: 
-cell.src = "../images/pirate.png"; 
+cell.src = 'pirate.png'; 
 break; 
 case HOME: 
-cell.src = "../images/home.png"; 
+cell.src = 'home.png'; 
 break; 
 } 
 //Добавление корабля из массива gameObjects 
 switch(gameObjects[row][column]) 
 { 
 case SHIP: 
-cell.src = "../images/ship.png"; 
+cell.src = 'ship.png'; 
 break; 
 case MONSTER: 
-cell.src =  "../images/monster.png";
+cell.src =  'monster.png';
 break; 
 } 
 //Позиционирование клетки на карте 
